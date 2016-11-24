@@ -85,51 +85,7 @@ public class SMSGW implements Runnable{
 	            csrf_token=getCsrf_token(responseBody);
 	            System.out.println("----------------------------------------");
 	           // httpget.setURI(new URI("http://192.168.8.1/api/sms/sms-list"));
-	           String body= "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-	            +"<request><PageIndex>1</PageIndex><ReadCount>20</ReadCount><BoxType>1</BoxType><SortType>0</SortType>"
-	            +"<Ascending>0</Ascending><UnreadPreferred>0</UnreadPreferred></request>";
-	           StringEntity entity = new StringEntity(body);
-	            HttpPost httppost = new HttpPost(new URI("http://192.168.8.1/api/sms/sms-list"));
-
-	            httppost.addHeader("Cookie",cookie);
-	            httppost.addHeader("__RequestVerificationToken",csrf_token);
-	            httppost.setEntity(entity);
-	            responseBody = httpclient.execute(httppost, myResponseHandler);
-	            
-	            //System.out.println(responseBody);
-	            org.jsoup.nodes.Document doc2 = Jsoup.parse(responseBody, "", Parser.xmlParser());
-	            Elements links=doc2.select("Message");
-	            for (Element link : links) {
-	            	Element e=link.getElementsByTag("Index").first();
-	            	String s_t=e.text();
-	            	e=link.getElementsByTag("Date").first();
-	            	s_t=s_t+" : "+e.text();
-	            	e=link.getElementsByTag("Phone").first();
-	            	s_t=s_t+" : "+e.text();
-	            	e=link.getElementsByTag("Content").first();
-	            	//e.text();
-	            	/*String s1="5656435383966E6F64653D32FFFFFFFF73656E736F72313B74656D703B31303B68756D69643B33303B";
-	            	
-	            	System.out.println(s1.length());
-	            	byte[]bytedata=DatatypeConverter.parseHexBinary(s1);
-	            	s_t=s_t+" : "+convertHexToString(s1);
-	            	byte[]bytedata1=hexStringToByteArray(s1);
-	            	hexStringToByteArray(e.text());*/
-	            	//CoAP coap = new CoAP();
-	            	System.out.println("Content:"+e.text());
-	            	System.out.println("Content-Length:"+e.text().length());
-	            	try {
-	            		UdpDataParser udpDataParser =new UdpDataParser();
-		            	byte[]b_array=DatatypeConverter.parseHexBinary(e.text());
-		            	Message m=udpDataParser.parseMessage(b_array);
-		            	System.out.println(m.getPayloadString());
-	            	}catch(Exception e1){
-	            		e1.printStackTrace();
-	            	}
-	            	
-	            	System.out.println(s_t);
-	        	//e.attr(attributeKey)
-	        	 }
+	            getSMS();
 	        
 	            //System.out.println(doc2.toString());
 	        } 
@@ -146,9 +102,9 @@ public class SMSGW implements Runnable{
 	        }
 		
 	}
-	public void getSMS(){
+	public void getSMS() throws Exception{
 		 String body= "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-		            +"<request><PageIndex>1</PageIndex><ReadCount>20</ReadCount><BoxType>1</BoxType><SortType>0</SortType>"
+		            +"<request><PageIndex>1</PageIndex><ReadCount>30</ReadCount><BoxType>1</BoxType><SortType>0</SortType>"
 		            +"<Ascending>0</Ascending><UnreadPreferred>0</UnreadPreferred></request>";
 		           StringEntity entity = new StringEntity(body);
 		            HttpPost httppost = new HttpPost(new URI("http://192.168.8.1/api/sms/sms-list"));
@@ -156,8 +112,8 @@ public class SMSGW implements Runnable{
 		            httppost.addHeader("Cookie",cookie);
 		            httppost.addHeader("__RequestVerificationToken",csrf_token);
 		            httppost.setEntity(entity);
-		            responseBody = httpclient.execute(httppost, myResponseHandler);
-		            
+		            String responseBody = httpclient.execute(httppost, myResponseHandler);
+		            csrf_token=myResponseHandler.getCsrf_token();
 		            //System.out.println(responseBody);
 		            org.jsoup.nodes.Document doc2 = Jsoup.parse(responseBody, "", Parser.xmlParser());
 		            Elements links=doc2.select("Message");
@@ -171,11 +127,16 @@ public class SMSGW implements Runnable{
 		            	e=link.getElementsByTag("Content").first();
 		            	System.out.println("Content:"+e.text());
 		            	System.out.println("Content-Length:"+e.text().length());
+		            	deleteSMS((s_t.split(":"))[0]);
 		            	try {
+		            		String test_s="400341a7b56c69676874ff73656e736f72313b74656d703b31303b68756d69643b33303b68";
 		            		UdpDataParser udpDataParser =new UdpDataParser();
-			            	byte[]b_array=DatatypeConverter.parseHexBinary(e.text());
+			            	byte[]b_array=DatatypeConverter.parseHexBinary(test_s);
 			            	Message m=udpDataParser.parseMessage(b_array);
 			            	System.out.println(m.getPayloadString());
+			            	Thread t1=new Thread(new SendDataToSSC(m.getPayloadString()));
+			                t1.start();
+			            	
 		            	}catch(Exception e1){
 		            		e1.printStackTrace();
 		            	}
@@ -187,47 +148,18 @@ public class SMSGW implements Runnable{
 	}
 	public void deleteSMS(String message_id) throws Exception{
 		// httpget.setURI(new URI("http://192.168.8.1/api/sms/sms-list"));
-        String body= "<?xml version=\"1.0\" encoding=\"UTF-8\"?><request><Index>"+message_id+"</Index></request>";
+        String body= "<?xml version=\"1.0\" encoding=\"UTF-8\"?><request><Index>"+message_id.trim()+"</Index></request>";
         StringEntity entity = new StringEntity(body);
          HttpPost httppost = new HttpPost(new URI("http://192.168.8.1/api/sms/delete-sms"));
-
+         httppost.addHeader("Content-Typ","application/x-www-form-urlencoded; charset=UTF-8");
          httppost.addHeader("Cookie",cookie);
          httppost.addHeader("__RequestVerificationToken",csrf_token);
          httppost.setEntity(entity);
          String responseBody = httpclient.execute(httppost, myResponseHandler);
+         csrf_token=myResponseHandler.getCsrf_token();
+         System.out.println("responseBody:"+responseBody);
 	}
-	public static String convertHexToString(String hex){
-
-	  	  StringBuilder sb = new StringBuilder();
-	  	  StringBuilder temp = new StringBuilder();
-
-	  	  //49204c6f7665204a617661 split into two characters 49, 20, 4c...
-	  	  for( int i=0; i<hex.length()-1; i+=2 ){
-
-	  	      //grab the hex in pairs
-	  	      String output = hex.substring(i, (i + 2));
-	  	      //convert hex to decimal
-	  	      int decimal = Integer.parseInt(output, 16);
-	  	      //convert the decimal to character
-	  	      sb.append((char)decimal);
-
-	  	      temp.append(decimal);
-	  	  }
-	  	  //System.out.println("Decimal : " + temp.toString());
-
-	  	  return sb.toString();
-	    }
-	public  byte[] hexStringToByteArray(String s) {
-	    int len = s.length();
-	    byte[] data = new byte[len / 2];
-	    
-	    for (int i = 0; i < len; i += 2) {
-	    	
-	        data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-	                             + Character.digit(s.charAt(i+1), 16));
-	    }
-	    return data;
-	}
+	
 	public String getCsrf_token(String responseBody){
 		/*String beginTag="<meta name=\"csrf_token\" content=\"";
         String endTag="\"/>";
@@ -243,8 +175,11 @@ public class SMSGW implements Runnable{
         org.jsoup.nodes.Document doc1 = Jsoup.parse(responseBody);
         Elements links=doc1.getElementsByTag("meta");
         tmp_csrf_token=links.get(0).attr("content");
-        System.out.println("csrf_token:"+csrf_token);
+        System.out.println("csrf_token:"+tmp_csrf_token);
         return tmp_csrf_token;
+	}
+	public void sendDataToSSC(String data){
+		
 	}
 	public String coapParser(String coap_data){
 		return coap_data;

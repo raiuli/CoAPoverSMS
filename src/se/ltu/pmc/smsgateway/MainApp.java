@@ -16,8 +16,9 @@ public class MainApp {
         //decoding byte array into base64
         byte[] decoded = Base64.decodeBase64(encoded);      
         System.out.println("Base 64 Decoded  String : " + new String(decoded));
-        Thread t= new Thread(new SMSGW());
-        t.start();
+        
+        Thread t2= new Thread(new SMSGW());
+        t2.start();
         
 		// TODO Auto-generated method stub
 		/*HTTPHandler hTTPHandler= new HTTPHandler();
