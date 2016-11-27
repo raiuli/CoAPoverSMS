@@ -17,9 +17,9 @@ public class MyResponseHandler implements ResponseHandler<String>{
 	public String handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
 		  int status = response.getStatusLine().getStatusCode();
           Header[] headers=response.getAllHeaders();
-          System.out.println("Response Header Begin================================================");
+          //System.out.println("Response Header Begin================================================");
           for(Header s:headers){
-          	System.out.println(s.toString());
+          	//System.out.println(s.toString());
           	if (s.getName().equals("Set-Cookie")){
           		cookie=s.getValue();
           	}
@@ -28,8 +28,8 @@ public class MyResponseHandler implements ResponseHandler<String>{
           	}
           }
           
-          System.out.println(headers.length);
-          System.out.println("Response Header End================================================");
+          //System.out.println(headers.length);
+          //System.out.println("Response Header End================================================");
           if (status >= 200 && status < 300) {
               HttpEntity entity = response.getEntity();
               return entity != null ? EntityUtils.toString(entity) : null;

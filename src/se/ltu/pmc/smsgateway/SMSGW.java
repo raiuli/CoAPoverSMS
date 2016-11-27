@@ -38,6 +38,7 @@ public class SMSGW implements Runnable{
 		
 	}
 	public void run(){
+		while(true){
 		 httpclient = HttpClients.createDefault();
          
 	        try {
@@ -86,7 +87,8 @@ public class SMSGW implements Runnable{
 	            System.out.println("----------------------------------------");
 	           // httpget.setURI(new URI("http://192.168.8.1/api/sms/sms-list"));
 	            getSMS();
-	        
+	            httpclient.close();
+	            Thread.sleep(60*1000);
 	            //System.out.println(doc2.toString());
 	        } 
 	        catch(Exception e){
@@ -100,6 +102,7 @@ public class SMSGW implements Runnable{
 					e.printStackTrace();
 				}
 	        }
+		}
 		
 	}
 	public void getSMS() throws Exception{
@@ -125,15 +128,16 @@ public class SMSGW implements Runnable{
 		            	e=link.getElementsByTag("Phone").first();
 		            	s_t=s_t+" : "+e.text();
 		            	e=link.getElementsByTag("Content").first();
+		            	s_t=s_t+" : "+e.text();
 		            	System.out.println("Content:"+e.text());
 		            	System.out.println("Content-Length:"+e.text().length());
 		            	deleteSMS((s_t.split(":"))[0]);
 		            	try {
-		            		String test_s="400341a7b56c69676874ff73656e736f72313b74656d703b31303b68756d69643b33303b68";
+		            		//String test_s="400341a7b56c69676874ff73656e736f72313b74656d703b31303b68756d69643b33303b68";
 		            		UdpDataParser udpDataParser =new UdpDataParser();
-			            	byte[]b_array=DatatypeConverter.parseHexBinary(test_s);
+			            	byte[]b_array=DatatypeConverter.parseHexBinary(e.text());
 			            	Message m=udpDataParser.parseMessage(b_array);
-			            	System.out.println(m.getPayloadString());
+			            	System.out.println("Data Received:"+m.getPayloadString());
 			            	Thread t1=new Thread(new SendDataToSSC(m.getPayloadString()));
 			                t1.start();
 			            	
@@ -157,7 +161,7 @@ public class SMSGW implements Runnable{
          httppost.setEntity(entity);
          String responseBody = httpclient.execute(httppost, myResponseHandler);
          csrf_token=myResponseHandler.getCsrf_token();
-         System.out.println("responseBody:"+responseBody);
+         System.out.println("Deleteing SMS:"+message_id.trim()+"responseBody:"+responseBody);
 	}
 	
 	public String getCsrf_token(String responseBody){

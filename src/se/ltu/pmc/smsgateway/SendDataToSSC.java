@@ -55,11 +55,11 @@ public class SendDataToSSC implements Runnable{
 			 JSONObject jSONObject= new JSONObject(body2);
 			 JSONArray jsonArray= jSONObject.getJSONArray("measurements");
 			String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-			System.out.println(timeStamp);
+			//System.out.println(timeStamp);
 
 			 Object jSONDateTime=((JSONObject)jsonArray.get(0)).put("data_time",timeStamp);
-			 jSONDateTime=((JSONObject)jsonArray.get(0)).put("serial","brbwsn01");
-			 jSONDateTime=((JSONObject)jsonArray.get(0)).put("temperature",Integer.valueOf(data_fileds[2]));
+			 jSONDateTime=((JSONObject)jsonArray.get(0)).put("serial",data_fileds[0]);
+			 jSONDateTime=((JSONObject)jsonArray.get(0)).put("temperature",Float.valueOf(data_fileds[2]));
 			 JSONObject jSONObject2= new JSONObject();
 			 jSONObject2.put("serial","brbwsn02");
 			 jSONObject2.put("soil_moisture",data_fileds[4]);
@@ -68,16 +68,17 @@ public class SendDataToSSC implements Runnable{
 			 //jsonArray.put(jSONObject2);
 			 //jSONDateTime.put("data_time", timeStamp);
 			 //("data_time", timeStamp);
-
+			 
 			 HttpPost httppost = new HttpPost(new URI("http://130.240.134.30/ssc/api/basic/temperature/submit"));
 			 httppost.addHeader("Authorization","Basic dGVzdGFwaTpwYXNzdzByZA==");
 			 httppost.addHeader("Content-Type","application/x-www-form-urlencoded");
 				body1="param="+jSONObject.toString();
-				System.out.println(body1);
+				
 				StringEntity entity = new StringEntity(body1);
 				httppost.setEntity(entity);
 	            String responseBody = httpclient.execute(httppost, myResponseHandler);
-	            System.out.println(responseBody);
+	            System.out.println("Sending Data to SSC:"+body1+"Response frm SSC:"+responseBody);
+	            //System.out.println(responseBody);
 			 //httppost.addHeader("Authorization","Basic dGVzdGFwaTpwYXNzdzByZA==");
 			
 		}catch(Exception e){
