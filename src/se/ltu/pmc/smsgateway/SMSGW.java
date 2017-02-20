@@ -3,6 +3,8 @@ package se.ltu.pmc.smsgateway;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -23,6 +25,7 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.californium.core.coap.Message;
+import org.eclipse.californium.core.coap.OptionSet;
 import org.eclipse.californium.core.network.serialization.UdpDataParser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
@@ -52,7 +55,7 @@ public class SMSGW implements Runnable{
 	            //HttpGet httpget = new HttpGet("http://192.168.8.1/api/sms/sms-count");
 	            HttpGet httpget = new HttpGet("http://192.168.8.1/html/index.html");
 	            
-	            System.out.println("Executing request " + httpget.getRequestLine());
+	            //System.out.println("Executing request " + httpget.getRequestLine());
 	           
 	           /* // Create a custom response handler
 	            ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
@@ -84,11 +87,11 @@ public class SMSGW implements Runnable{
 	            String responseBody = httpclient.execute(httpget, myResponseHandler);
 	            cookie=myResponseHandler.getCookie();
 	            csrf_token=getCsrf_token(responseBody);
-	            System.out.println("----------------------------------------");
+	            System.out.print("----------------------------------------");
 	           // httpget.setURI(new URI("http://192.168.8.1/api/sms/sms-list"));
 	            getSMS();
 	            httpclient.close();
-	            Thread.sleep(60*1000);
+	            Thread.sleep(1000);
 	            //System.out.println(doc2.toString());
 	        } 
 	        catch(Exception e){
@@ -137,10 +140,21 @@ public class SMSGW implements Runnable{
 		            		UdpDataParser udpDataParser =new UdpDataParser();
 			            	byte[]b_array=DatatypeConverter.parseHexBinary(e.text());
 			            	Message m=udpDataParser.parseMessage(b_array);
-			            	System.out.println("Data Received:"+m.getPayloadString());
-			            	Thread t1=new Thread(new SendDataToSSC(m.getPayloadString()));
-			                t1.start();
-			            	
+			            	int a=m.getMID();
+			            	OptionSet aa=m.getOptions();
+			            	System.out.println("Data Received:"+m.getMID()+"|"+aa.getURIQueryCount()+"|"+aa.getUriQueryString()+"|"+m.getPayloadString());
+			            	//Thread t1=new Thread(new SendDataToSSC(m.getPayloadString()));
+			                //t1.start();
+			            	SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS");//dd/MM/yyyy
+			    		    Date now = new Date();
+			    		    String strDate = sdfDate.format(now);
+			    		    String s=aa.getUriQueryString();
+			    		    int a1=s.indexOf("pid");
+			    		    s=s.substring(a1+4, s.length());
+			    		    
+			    		    int msg_part=Integer.parseInt(s);
+			    		    if(msg_part==1)
+			    		    	System.out.println("recv_data|"+strDate+"|"+m.getMID()+"|"+aa.getUriQueryString()+"|"+m.getPayloadString());
 		            	}catch(Exception e1){
 		            		e1.printStackTrace();
 		            	}
@@ -179,7 +193,7 @@ public class SMSGW implements Runnable{
         org.jsoup.nodes.Document doc1 = Jsoup.parse(responseBody);
         Elements links=doc1.getElementsByTag("meta");
         tmp_csrf_token=links.get(0).attr("content");
-        System.out.println("csrf_token:"+tmp_csrf_token);
+        System.out.print("csrf_token:"+tmp_csrf_token);
         return tmp_csrf_token;
 	}
 	public void sendDataToSSC(String data){

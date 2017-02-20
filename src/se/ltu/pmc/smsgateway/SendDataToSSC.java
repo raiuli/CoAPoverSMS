@@ -60,6 +60,7 @@ public class SendDataToSSC implements Runnable{
 			 Object jSONDateTime=((JSONObject)jsonArray.get(0)).put("data_time",timeStamp);
 			 jSONDateTime=((JSONObject)jsonArray.get(0)).put("serial",data_fileds[0]);
 			 jSONDateTime=((JSONObject)jsonArray.get(0)).put("temperature",Float.valueOf(data_fileds[2]));
+			 
 			 JSONObject jSONObject2= new JSONObject();
 			 jSONObject2.put("serial","brbwsn02");
 			 jSONObject2.put("soil_moisture",data_fileds[4]);
@@ -69,7 +70,8 @@ public class SendDataToSSC implements Runnable{
 			 //jSONDateTime.put("data_time", timeStamp);
 			 //("data_time", timeStamp);
 			 
-			 HttpPost httppost = new HttpPost(new URI("http://130.240.134.30/ssc/api/basic/temperature/submit"));
+			 //HttpPost httppost = new HttpPost(new URI("http://130.240.134.30/ssc/api/basic/temperature/submit"));
+			 HttpPost httppost = new HttpPost(new URI("http://192.168.1.3:8080/infocom2017webtest/rest/ssc/api/basic/temperature/submit"));
 			 httppost.addHeader("Authorization","Basic dGVzdGFwaTpwYXNzdzByZA==");
 			 httppost.addHeader("Content-Type","application/x-www-form-urlencoded");
 				body1="param="+jSONObject.toString();
